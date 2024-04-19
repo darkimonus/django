@@ -1,0 +1,6 @@
+<div class="chat-message {% if message.author == request.user %}chat-message-sent{% else %}chat-message-received{% endif %}">
+    <div class="chat-message-content">
+        <strong><a href="{{ message.author.profile.get_absolute_url }}">{{ message.author.username }}</a></strong>: {{ message.body }}
+        <span class="chat-message-time">{{ message.timestamp }}</span>
+    </div>
+</div>

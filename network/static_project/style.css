@@ -1,0 +1,89 @@
+body {
+    background: #F8F8F8 !important;
+}
+
+.nav {
+    border-radius: 0px !important;
+    padding: 10px 0 10px 0 !important;
+    background-color: #396afc !important;
+}
+
+.mb-7 {
+    margin-bottom: 7px !important;
+}
+
+.mt-5 {
+    margin-top: 5px !important;
+}
+
+.mymodal {
+    height: 300px !important;
+    top: 200px !important;
+    font-size: 20px !important;
+}
+
+.mb-5 {
+    margin-bottom: 5px !important;
+}
+
+.w-big {
+    width: 200px !important;
+}
+
+.bwhite-lg {
+    background-color: transparent !important;
+}
+
+.bwhite-sm {
+    background-color: transparent !important;
+    width: 10px !important;
+}
+
+.comment-box {
+    display: none;
+}
+
+    .emoji-button {
+        padding: 5px; /* Добавляем внутренний отступ */
+        border: none; /* Убираем границу кнопки */
+        background: none; /* Убираем фон кнопки */
+        cursor: pointer; /* Делаем указатель мыши указывать на кнопку */
+    }
+
+    .emoji-button img {
+        width: 16px; /* Уменьшаем ширину изображения */
+        height: 16px; /* Уменьшаем высоту изображения */
+    }
+
+.chat-message {
+    padding: 5px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.chat-message-sent {
+    text-align: right;
+    background-color: #dcf8c6;
+}
+
+.chat-message-received {
+    text-align: left;
+    background-color: #f1f0f0;
+}
+
+.chat-message-content {
+    display: inline-block;
+}
+
+.chat-message-time {
+    font-size: 0.8em;
+    color: #999;
+}
+.post-image {
+    max-width: 100%; /* Устанавливаем максимальную ширину изображения на 100% */
+    height: auto; /* Автоматически подстраиваем высоту, чтобы изображение не было искажено */
+}
+.post-image-container {
+    max-width: 800px; /* Устанавливаем максимальную ширину контейнера изображения */
+    margin: 0 auto; /* Центрируем контейнер по горизонтали */
+}

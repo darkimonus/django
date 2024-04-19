@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Main Page{% endblock title %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="eleven wide column">
+        {% for obj in qs %}
+
+        <div class="ui fluid card" style="margin-bottom: 20px;">
+            <div class="content">
+                <div class="right floated meta">
+                    <div class="ui grid">
+                        <div class="row">
+                            {% if request.user == obj.author.user %}
+                                <a href="{% url 'posts:post-update' obj.pk %}">
+                                    <button class="ui button bwhite-lg" style="margin-right: 5px;">Update</button>
+                                </a>
+                                <a href="{% url 'posts:post-delete' obj.pk %}">
+                                    <button class="ui button bwhite-lg">Delete</button>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <img class="ui avatar image" src="{{ obj.author.avatar.url }}" style="margin-right: 10px;">
+                {{ obj.author.user }} - {{ obj.created|timesince }} ago
+            </div>
+            <div class="post-image-container" style="margin: 10px 0;">
+                {% if obj.image %}
+                    <img src="{{ obj.image.url }}" style="width: 100%; max-width: 500px; height: auto;">
+                {% endif %}
+            </div>
+            <div class="content">
+                <p>{{ obj.content }}</p>
+                <div class="right floated" style="margin-top: 10px;">
+                    <a href="{% url 'posts:make_report' post_id=obj.id %}">
+                        <button class="ui primary button" style="margin-bottom: 5px;">Report</button>
+                    </a>
+                    <form action="{% url 'posts:react-post' %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="post_id" value="{{ obj.id }}">
+                        {% for item in emojis %}
+                            <button class="emoji-button {{ item.name }}" type="submit" name="reaction" value="{{ item.name }}" style="border: none; background: none; padding: 0;">
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" style="width: 16px; height: 16px; vertical-align: middle;">
+                                {% if item.name == 'Like' %}
+                                    <span>{{ obj.like_count }}</span>
+                                {% elif item.name == 'Funny' %}
+                                    <span>{{ obj.funny_count }}</span>
+                                {% elif item.name == 'Sad' %}
+                                    <span>{{ obj.sad_count }}</span>
+                                {% elif item.name == 'Dislike' %}
+                                    <span>{{ obj.dislike_count }}</span>
+                                {% elif item.name == 'Empty' %}
+                                    <span>{{ obj.empty_count }}</span>
+                                {% endif %}
+                            </button>
+                        {% endfor %}
+                    </form>
+                </div>
+                <i class="comment icon"></i>
+                <span>{{ obj.num_comments }} comments</span>
+            </div>
+            <div class="extra content">
+                <button class="cmt_btn ui button" style="margin-bottom: 10px;">Show / Hide Comments</button>
+                <div class="comment-box" style="display: none;">
+                    {% if obj.comment_set.all %}
+                        {% for c in obj.comment_set.all %}
+                            <div class="ui segment" style="margin-bottom: 10px;">
+                                <img class="ui avatar image" src="{{ c.user.avatar.url }}" style="margin-right: 10px;">
+                                <span>{{ c.user }}</span>
+                                <div style="margin-top: 5px;">{{ c.body }}</div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <form action="" method="POST" class="ui form">
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" value="{{ obj.id }}">
+                    {{ c_form }}
+                    <button type="submit" name="submit_c_form" class="ui primary button" style="margin-top: 10px; width: 100%;">Send</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="five wide column">
+        <div class="ui segment" style="margin-bottom: 20px;">
+            {% if post_added %}
+                <div class="ui green message">Post added</div>
+            {% endif %}
+            <form action="" method="POST" class="ui form" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ p_form }}
+                <button type="submit" name="submit_p_form" class="ui positive button" style="width: 100%; margin-top: 10px;">Create</button>
+            </form>
+        </div>
+        <div class="ui segment">
+            {% if topic_added %}
+                <div class="ui green message">Topic created</div>
+            {% endif %}
+            <form action="" method="POST" class="ui form" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ t_form }}
+                <button type="submit" name="submit_t_form" class="ui positive button" style="width: 100%; margin-top: 10px;">Create</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $(".cmt_btn").click(function() {
+            $(this).next(".comment-box").toggle("slow");
+        });
+    });
+</script>
+{% endblock scripts %}
