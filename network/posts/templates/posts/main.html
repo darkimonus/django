@@ -10,35 +10,33 @@ Posts
         <div class="row">
             <div class="eleven wide column">
                     {% for obj in qs %}
-                <div class="ui fluid card">
-                    <div class="content">
-                        {{ obj }}
-                        <!-- Отображаем количество каждого типа реакции рядом с кнопками -->
-                        <span>Like: {{ obj.like_count }}</span>
-                        <span>Funny: {{ obj.funny_count }}</span>
-                        <span>Sad: {{ obj.sad_count }}</span>
-                        <span>Dislike: {{ obj.dislike_count }}</span>
-                    </div>
-                    <form action="{% url 'posts:react-post' %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="post_id" value="{{ obj.id }}">
-                        <!-- Добавляем значения каждого типа реакции в атрибут value кнопок -->
-                        <button type="submit" name="reaction" value="Like">
-                            <img src="{% static 'path/to/like_image.png' %}" alt="{{ obj.like_count }}">
-                        </button>
-                        <button type="submit" name="reaction" value="Funny">
-                            <img src="{% static 'path/to/funny_image.png' %}" alt="{{ obj.funny_count }}">
-                        </button>
-                        <button type="submit" name="reaction" value="Sad">
-                            <img src="{% static 'path/to/sad_image.png' %}" alt="{{ obj.sad_count }}">
-                        </button>
-                        <button type="submit" name="reaction" value="Dislike">
-                            <img src="{% static 'path/to/dislike_image.png' %}" alt="{{ obj.dislike_count }}">
-                        </button>
-                        <!-- Помните, что эти значения не будут обновляться динамически без перезагрузки страницы -->
-                    </form>
-                </div>
+    <div class="ui fluid card">
+        <div class="content">
+            {{ obj }}
+        </div>
+        <form action="{% url 'posts:react-post' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ obj.id }}">
+            {% for item in emojis %}
+                <button class="{{ item.name }}" type="submit" name="reaction" value="{{ item.name }}">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    <!-- Отображаем количество реакций соответствующего типа -->
+                    {% if item.name == 'Like' %}
+                        <span>{{ obj.like_count }}</span>
+                    {% elif item.name == 'Funny' %}
+                        <span>{{ obj.funny_count }}</span>
+                    {% elif item.name == 'Sad' %}
+                        <span>{{ obj.sad_count }}</span>
+                    {% elif item.name == 'Dislike'%}
+                        <span>{{ obj.dislike_count }}</span>
+                    {% elif item.name == 'Empty' %}
+                        <span>{{ obj.empty_count }}</span>
+                    {% endif %}
+                </button>
             {% endfor %}
+        </form>
+    </div>
+{% endfor %}
             </div>
             <div class="five wide column">
                 Form
