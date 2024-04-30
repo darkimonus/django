@@ -1,19 +1,26 @@
 from django.shortcuts import render, redirect
 from .models import Topic, Post, Like, Comment, Emoji
 from profiles.models import Profile
+from django.db.models import Count, Q
 
 # Create your views here.
 
 
 def post_comment_create_and_list_view(request):
-    qs = Post.objects.order_by('-updated')[:10]
+    qs = Post.objects.annotate(
+        like_count=Count('like', filter=Q(like__value='Like')),
+        funny_count=Count('like', filter=Q(like__value='Funny')),
+        sad_count=Count('like', filter=Q(like__value='Sad')),
+        dislike_count=Count('like', filter=Q(like__value='Dislike')),
+        empty_count=Count('like', filter=Q(like__value='Empty'))
+    ).order_by('-updated')[:10]
     emojis = Emoji.objects.all()
     profile = Profile.objects.get(user=request.user)
 
     context = {
-      'qs': qs,
-      'emojis': emojis,
-      'profile': profile,
+        'qs': qs,
+        'emojis': emojis,
+        'profile': profile,
     }
 
     return render(request, 'posts/main.html', context)
