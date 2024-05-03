@@ -2,11 +2,20 @@ from django.shortcuts import render, redirect
 from .models import Topic, Post, Like, Comment, Emoji
 from profiles.models import Profile
 from django.db.models import Count, Q
+from .forms import PostModelForm, TopicModelForm, CommentModelForm
+from django.views.generic import UpdateView, DeleteView
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 # Create your views here.
 
 
 def post_comment_create_and_list_view(request):
+    # Getting reactions counts
     qs = Post.objects.annotate(
         like_count=Count('like', filter=Q(like__value='Like')),
         funny_count=Count('like', filter=Q(like__value='Funny')),
@@ -14,13 +23,54 @@ def post_comment_create_and_list_view(request):
         dislike_count=Count('like', filter=Q(like__value='Dislike')),
         empty_count=Count('like', filter=Q(like__value='Empty'))
     ).order_by('-updated')[:10]
+    # getting emoji images for reactions
     emojis = Emoji.objects.all()
+    # Topic, Post and Comment forms initials
+    t_form = TopicModelForm()
+    p_form = PostModelForm()
+    c_form = CommentModelForm()
+    post_added = False
+    topic_added = False
+
     profile = Profile.objects.get(user=request.user)
+
+    if 'submit_t_form' in request.POST:
+        print(request.POST)
+        t_form = TopicModelForm(request.POST, request.FILES)
+        if t_form.is_valid():
+            t_instance = t_form.save(commit=False)
+            t_instance.author = profile
+            t_instance.save()
+            t_form = TopicModelForm()
+            topic_added = True
+
+    if 'submit_p_form' in request.POST:
+        p_form = PostModelForm(request.POST, request.FILES)
+        if p_form.is_valid():
+            p_instance = p_form.save(commit=False)
+            p_instance.author = profile
+            p_instance.save()
+            p_form = PostModelForm()
+            post_added = True
+
+    if 'submit_c_form' in request.POST:
+        c_form = CommentModelForm(request.POST)
+        if c_form.is_valid():
+            c_instance = c_form.save(commit=False)
+            c_instance.user = profile
+            c_instance.post = Post.objects.get(id=request.POST.get('post_id'))
+            c_instance.save()
+            c_form = CommentModelForm()
 
     context = {
         'qs': qs,
         'emojis': emojis,
         'profile': profile,
+        'p_form': p_form,
+        't_form': t_form,
+        'c_form': c_form,
+        'post_added': post_added,
+        'topic_added': topic_added,
     }
 
     return render(request, 'posts/main.html', context)
@@ -43,13 +93,13 @@ def react_post(request):
                     like = Like.objects.get(user=profile, post=post_obj)
                     like.delete()
                     return redirect('posts:post-main')
-                #if reaction is not the same
+                # if reaction is not the same
                 else:
                     like = Like.objects.get(user=profile, post_id=post_id)
                     like.value = reaction
                     post_obj.save()
                     like.save()
-            #if reaction doesn't exist
+            # if reaction doesn't exist
             else:
                 post_obj.liked.add(profile)
                 created = Like.objects.create(user=profile, post_id=post_id)
@@ -57,4 +107,36 @@ def react_post(request):
                 post_obj.save()
                 created.save()
 
-    return redirect('posts:post-main')
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+class PostDeleteView(DeleteView):
+    model = Post
+    template_name = 'posts/confirm_del.html'
+    success_url = reverse_lazy('posts:post-main')
+
+    def get_object(self, *args, **kwargs):
+        pk = self.kwargs.get('pk')
+        obj = Post.objects.get(pk=pk)
+        if not obj.author.user == self.request.user:
+            messages.warning(self.request, 'You need to '
+                                           'be the author of'
+                                           ' the post in order to delete it')
+        return obj
+
+
+class PostUpdateView(UpdateView):
+    model = Post
+    form_class = PostModelForm
+    template_name = 'posts/update.html'
+    success_url = reverse_lazy('posts:post-main')
+
+    def form_valid(self, form):
+        profile = Profile.objects.get(user=self.request.user)
+        if form.instance.author == profile:
+            return super().form_valid(form)
+        else:
+            form.add_error(None, 'You need to '
+                                 'be the author of'
+                                 ' the post in order to delete it')
+            return super().form_invalid(form)

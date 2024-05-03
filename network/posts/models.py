@@ -11,7 +11,7 @@ class Topic(models.Model):
     liked = models.ManyToManyField(Profile, blank=True, related_name='topic_likes')
 
     def __str__(self):
-        return str(self.name[:10] + '..')
+        return str(self.name)
 
 
 class Post(models.Model):
@@ -21,14 +21,14 @@ class Post(models.Model):
     liked = models.ManyToManyField(Profile, blank=True, related_name='post_likes')
     topics = models.ManyToManyField(Topic, blank=True, related_name='post_topics')
     updated = models.DateTimeField(auto_now=True)
-    created = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='posts')
 
     def __str__(self):
         if len(self.content) > 25:
-            return f"{self.content[:20]}..--{self.created.strftime('%d-%m-%Y')}"
+            return f"{len(self.content)} symbols--{self.content[:20]}..--{self.created.strftime('%d-%m-%Y')}"
         else:
-            return f"{self.content}..--{self.created.strftime('%d-%m-%Y')}"
+            return f"{self.content}--{self.created.strftime('%d-%m-%Y')}"
 
     def num_likes(self):
         return self.liked.all().count()
@@ -45,7 +45,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     body = models.TextField(max_length=300)
     updated = models.DateTimeField(auto_now=True)
-    created = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
     liked = models.ManyToManyField(Profile, default=None, related_name='comment_likes')
 
     def __str__(self):
