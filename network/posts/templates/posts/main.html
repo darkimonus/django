@@ -35,8 +35,8 @@
             {% csrf_token %}
             <input type="hidden" name="post_id" value="{{ obj.id }}">
             {% for item in emojis %}
-                <button class="{{ item.name }}" type="submit" name="reaction" value="{{ item.name }}">
-                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                <button class="emoji-button {{ item.name }}" type="submit" name="reaction" value="{{ item.name }}">
+                    <img src="{{ item.image.url }}" alt="{{ item.name }} style="width: 16px; height: 16px;"" >
                     <!-- Отображаем количество реакций соответствующего типа -->
                     {% if item.name == 'Like' %}
                         <span>{{ obj.like_count }}</span>

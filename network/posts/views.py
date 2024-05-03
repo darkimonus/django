@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 # Create your views here.
 
-
+@login_required
 def post_comment_create_and_list_view(request):
     # Getting reactions counts
     qs = Post.objects.annotate(
@@ -76,6 +76,7 @@ def post_comment_create_and_list_view(request):
     return render(request, 'posts/main.html', context)
 
 
+@login_required
 def react_post(request):
     user = request.user
     if request.method == 'POST':
@@ -110,7 +111,7 @@ def react_post(request):
     return redirect(request.META.get('HTTP_REFERER'))
 
 
-class PostDeleteView(DeleteView):
+class PostDeleteView(LoginRequiredMixin, DeleteView):
     model = Post
     template_name = 'posts/confirm_del.html'
     success_url = reverse_lazy('posts:post-main')
@@ -125,7 +126,7 @@ class PostDeleteView(DeleteView):
         return obj
 
 
-class PostUpdateView(UpdateView):
+class PostUpdateView(LoginRequiredMixin, UpdateView):
     model = Post
     form_class = PostModelForm
     template_name = 'posts/update.html'

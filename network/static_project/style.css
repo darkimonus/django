@@ -43,3 +43,14 @@ body {
     display: none;
 }
 
+    .emoji-button {
+        padding: 5px; /* Добавляем внутренний отступ */
+        border: none; /* Убираем границу кнопки */
+        background: none; /* Убираем фон кнопки */
+        cursor: pointer; /* Делаем указатель мыши указывать на кнопку */
+    }
+
+    .emoji-button img {
+        width: 16px; /* Уменьшаем ширину изображения */
+        height: 16px; /* Уменьшаем высоту изображения */
+    }

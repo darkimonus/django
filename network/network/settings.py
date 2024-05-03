@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     'mainapp.apps.MainappConfig',
     'posts',
     'profiles',
-
-
 ]
+
+LOGIN_URL = '/admin/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
