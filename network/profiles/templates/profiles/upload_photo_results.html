@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Результаты поиска по фото
+{% endblock title %}
+
+{% block content %}
+<h2>Результаты поиска по фото</h2>
+
+{% if matches %}
+    {% for match in matches %}
+        <div class="ui segment">
+            <div class="ui grid">
+                <div class="row">
+                    <div class="three wide column">
+                        <img class="ui small circular image" src="{{ match.profile.avatar.url }}">
+                    </div>
+                    <div class="thirteen wide column">
+                        <h3>{{ match.profile.user }}</h3>
+                        <p>{{ match.profile.bio }}</p>
+                        <p>Процент совпадения: {{ match.similarity|floatformat:2 }}%</p>
+                        <a href="{{ match.profile.get_absolute_url }}"><button class="ui primary button mb-5 w-big">See profile</button></a>
+                        <br>
+
+                        {% if match.profile.user not in rel_receiver and match.profile.user not in rel_sender %}
+                            <form action="{% url 'profiles:send-invite' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_pk" value="{{ match.profile.pk }}">
+                                <button type="submit" class="ui positive basic button mb-5 w-big"><i class="plus square icon"></i>Add to friends</button>
+                            </form>
+                        {% endif %}
+
+                        {% if match.profile.user in rel_receiver and request.user not in match.profile.friends.all %}
+                            <button class="ui disabled button mb-5 w-big"><i class="user icon"></i>Waiting for approval</button>
+                        {% endif %}
+
+                        {% if request.user in match.profile.friends.all %}
+                            <form action="{% url 'profiles:remove-friend' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_pk" value="{{ match.profile.pk }}">
+                                <button type="submit" class="ui negative basic button mb-5 w-big"><i class="minus square icon"></i>Remove from friends</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <h1>No profiles found with a similarity above 40%.</h1>
+{% endif %}
+{% endblock content %}

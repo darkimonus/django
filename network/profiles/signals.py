@@ -2,6 +2,8 @@ from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from .models import Profile, Relationship
+import face_recognition
+import numpy as np
 
 
 @receiver(post_save, sender=User)
@@ -31,3 +33,6 @@ def pre_delete_remove_from_friends(sender, instance, **kwargs):
     receiver.friends.remove(sender.user)
     sender.save()
     receiver.save()
+
+
+

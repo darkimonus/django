@@ -9,6 +9,7 @@ from .views import (
     accept_invite,
     reject_invite,
     ProfileDetailView,
+    SearchByPhotoView,
 )
 
 app_name = 'profiles'
@@ -23,4 +24,5 @@ urlpatterns = [
     path('<slug>', ProfileDetailView.as_view(), name='profile-detail-view'),
     path('my-invites/accept/', accept_invite, name='accept-invite'),
     path('my-invites/reject/', reject_invite, name='reject-invite'),
+    path('search-by-photo/', SearchByPhotoView.as_view(), name='search-by-photo'),
 ]

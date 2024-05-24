@@ -1,11 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Profile, Relationship
 from .forms import ProfileModelForm
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, View
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from deepface import DeepFace
+import os
+from network import settings
+import numpy as np
+from django.http import JsonResponse
 # Create your views here.
 
 
@@ -174,3 +179,68 @@ def remove_from_friends(request):
         rel.delete()
         return redirect(request.META.get('HTTP_REFERER'))
     return redirect('profiles:my-profile-view')
+
+
+class SearchByPhotoView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'profiles/upload_photo.html')
+
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES['photo']
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+
+        uploaded_image_path = os.path.join(temp_dir, uploaded_file.name)
+
+        with open(uploaded_image_path, 'wb+') as destination:
+            for chunk in uploaded_file.chunks():
+                destination.write(chunk)
+
+        profiles = Profile.objects.all()
+        matches = []
+
+        for profile in profiles:
+            db_image_path = os.path.join(settings.MEDIA_ROOT, profile.avatar.name)
+
+            try:
+                # Используем DeepFace для сравнения изображений
+                result = DeepFace.verify(img1_path=uploaded_image_path, img2_path=db_image_path, model_name='VGG-Face')
+                similarity_percentage = (1 - result['distance']) * 100
+
+                if similarity_percentage >= 40:
+                    matches.append({
+                        'profile': profile,
+                        'similarity': similarity_percentage
+                    })
+            except Exception as e:
+                continue
+
+        results = [
+            {
+                'profile': match['profile'],
+                'username': match['profile'].user.username,
+                'first_name': match['profile'].first_name,
+                'last_name': match['profile'].last_name,
+                'similarity': match['similarity']
+            } for match in matches
+        ]
+
+        context = {
+            'matches': results,
+            'rel_receiver': self.get_relationship_receivers(request.user),
+            'rel_sender': self.get_relationship_senders(request.user)
+        }
+        return render(request, 'profiles/upload_photo_results.html', context)
+
+    def get_relationship_receivers(self, user):
+        profile = Profile.objects.get(user=user)
+        rel_r = Relationship.objects.filter(sender=profile)
+        return [item.receiver.user for item in rel_r]
+
+    def get_relationship_senders(self, user):
+        profile = Profile.objects.get(user=user)
+        rel_s = Relationship.objects.filter(receiver=profile)
+        return [item.sender.user for item in rel_s]
+
+

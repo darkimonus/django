@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Поиск по фотографии
+{% endblock title %}
+
+{% block content %}
+<h2>Загрузите фото для поиска профилей</h2>
+<form method="post" enctype="multipart/form-data" class="ui form">
+    {% csrf_token %}
+    <div class="field">
+        <label for="photo">Фото</label>
+        <input type="file" name="photo" accept="image/*" required>
+    </div>
+    <button type="submit" class="ui primary button">Искать</button>
+</form>
+{% endblock content %}

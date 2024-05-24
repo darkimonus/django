@@ -4,6 +4,10 @@ from .utils import get_random_code
 from django.template.defaultfilters import slugify
 from django.db.models import Q
 from django.shortcuts import reverse
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import face_recognition
+import numpy as np
 
 
 class ProfileManager(models.Manager):
@@ -130,3 +134,6 @@ class Relationship(models.Model):
 
     def __str__(self):
         return f'{self.sender}--{self.receiver}--{self.status}'
+
+
+
