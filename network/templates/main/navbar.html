@@ -4,6 +4,7 @@
 {% url 'profiles:my-invites-view' as path_to_my_invites %}
 {% url 'profiles:invite-profiles-view' as path_to_invites %}
 {% url 'profiles:all-profiles-view' as path_to_all_profiles %}
+{% url 'chats:main' as path_to_chat %}
 
 <div class="ui inverted menu nav mb-7">
   <div class="ui container">
@@ -13,6 +14,9 @@
     {% if request.user.is_authenticated %}
     <a href="{{path_to_posts}}" class="{% if request.path == path_to_posts %}active{% endif %} item">
         Posts
+    </a>
+            <a href="{{path_to_chat}}" class="{% if request.path == path_to_chat %}active{% endif %} item">
+        Chat
     </a>
     {% endif %}
 

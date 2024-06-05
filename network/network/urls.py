@@ -25,6 +25,7 @@ urlpatterns = [
     path('', home_view, name='home_view'),
     path('profiles/', include('profiles.urls', namespace='profiles')),
     path('posts/', include('posts.urls', namespace='posts')),
+    path('chats/', include('chats.urls', namespace='chats')),
     path('accounts/', include('allauth.urls')),
 ]
 
