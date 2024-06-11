@@ -80,3 +80,10 @@ class Emoji(models.Model):
         return self.name
 
 
+class Report(models.Model):
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reports')
+    text = models.TextField(max_length=300)
+    negative = models.BooleanField(default=True)
+    reviewed = models.BooleanField(default=False)
+    warning = models.BooleanField(default=False)

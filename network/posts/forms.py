@@ -1,5 +1,5 @@
 from django import forms
-from .models import Topic, Post, Comment
+from .models import Topic, Post, Comment, Report
 
 
 class TopicModelForm(forms.ModelForm):
@@ -25,3 +25,12 @@ class CommentModelForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ('body',)
+
+
+class ReportModelForm(forms.ModelForm):
+    text = forms.CharField(label='', widget=forms.TextInput(attrs=
+                                                            {'placeholder': 'Describe your feelings here'}))
+
+    class Meta:
+        model = Report
+        fields = ('text', 'negative', )

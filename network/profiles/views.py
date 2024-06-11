@@ -16,6 +16,8 @@ from django.http import JsonResponse
 
 @login_required
 def profile_view(request):
+    # del_user = Profile.objects.get(user_id=7)
+    # del_user.delete()
     profile = Profile.objects.get(user=request.user)
     form = ProfileModelForm(request.POST or None, request.FILES or None, instance=profile)
     confirm = False

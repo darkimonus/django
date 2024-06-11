@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Page{% endblock title %}
+
+{% block content %}
+<div class="ui grid">
+    <div class="seven wide column">
+        {% for obj in posts %}
+        <div class="ui fluid card" style="margin-bottom: 20px;">
+            <div class="content">
+                <div class="right floated meta">
+                    <div class="ui grid">
+                        <div class="row">
+                            <a href="{% url 'posts:post-delete' obj.pk %}">
+                                <button class="ui button bwhite-lg">Delete</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <img class="ui avatar image" src="{{ obj.author.avatar.url }}">
+                <span style="font-weight: bold;">{{ obj.author.user }}</span> - {{ obj.created|timesince }} ago
+            </div>
+            <div class="post-image-container" style="margin-top: 10px; margin-bottom: 10px;">
+                {% if obj.image %}
+                    <img class="post-image" src="{{ obj.image.url }}" style="max-width: 100%;">
+                {% endif %}
+            </div>
+            <div class="content">
+                <p>{{ obj.content }}</p>
+                <div class="right floated">
+                    <form action="{% url 'posts:react-post' %}" method="POST" class="ui form">
+                        {% csrf_token %}
+                        <input type="hidden" name="post_id" value="{{ obj.id }}">
+                        {% for item in emojis %}
+                            <button class="emoji-button {{ item.name }}" type="submit" name="reaction" value="{{ item.name }}">
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" style="width: 16px; height: 16px;">
+                                {% if item.name == 'Like' %}
+                                    <span>{{ obj.like_count }}</span>
+                                {% elif item.name == 'Funny' %}
+                                    <span>{{ obj.funny_count }}</span>
+                                {% elif item.name == 'Sad' %}
+                                    <span>{{ obj.sad_count }}</span>
+                                {% elif item.name == 'Dislike' %}
+                                    <span>{{ obj.dislike_count }}</span>
+                                {% elif item.name == 'Empty' %}
+                                    <span>{{ obj.empty_count }}</span>
+                                {% endif %}
+                            </button>
+                        {% endfor %}
+                    </form>
+                </div>
+                <i class="comment icon"></i>
+                <span>{{ obj.num_comments }} comments</span>
+            </div>
+            <div class="extra content">
+                <button class="cmt_btn ui button">Show / Hide Comments</button>
+                <div class="comment-box">
+                    {% if obj.comment_set.all %}
+                        {% for c in obj.comment_set.all %}
+                        <div class="ui segment">
+                            <img class="ui avatar image" src="{{ c.user.avatar.url }}">
+                            <span>{{ c.user }}</span>
+                            <div>{{ c.body }}</div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if obj.reports.all %}
+            {% for report in obj.reports.all %}
+                {% if report.reviewed is not True %}
+                    <div class="ui segment" style="margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <img class="ui avatar image" src="{{ report.user.avatar.url }}">
+                            <span style="margin-left: 10px;">{{ report.user.username }}</span>
+                        </div>
+                        <p style="margin-bottom: 10px;">{{ report.text }}</p>
+                        <form action="" method="POST" class="ui form">
+                            {% csrf_token %}
+                            <input type="hidden" name="report_id" value="{{ report.id }}">
+                            <button type="submit" name="submit_warning" class="ui negative button" style="margin-right: 10px;">Send Warning</button>
+                            <button type="submit" name="mark_reviewed" class="ui button" style="margin-right: 10px;">Mark as Reviewed</button>
+                            <button type="submit" name="block_user" class="ui negative button">Block User</button>
+                        </form>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Отображение просмотренных репортов -->
+            {% for report in obj.reports.all %}
+                {% if report.reviewed is not False %}
+                    <div class="ui segment" style="margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <img class="ui avatar image" src="{{ report.user.avatar.url }}">
+                            <span style="margin-left:                             10px;">{{ report.user.username }}</span>
+                        </div>
+                        <p style="margin-bottom: 10px;">{{ report.text }}</p>
+                        <form action="" method="POST" class="ui form">
+                            {% csrf_token %}
+                            <input type="hidden" name="report_id" value="{{ report.id }}">
+                            <button type="submit" name="submit_warning" class="ui negative button" style="margin-right: 10px;">Send Warning</button>
+                            <button type="submit" name="mark_reviewed" class="ui button" style="margin-right: 10px;">Mark as Reviewed</button>
+                            <button type="submit" name="block_user" class="ui negative button">Block User</button>
+                        </form>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        let display = false;
+        $(".cmt_btn").click(function() {
+            if (display === false) {
+                $(this).next(".comment-box").show("slow");
+                display = true;
+            } else {
+                $(this).next(".comment-box").hide("slow");
+                display = false;
+            }
+        });
+    });
+</script>
+{% endblock scripts %}
+
+</div>

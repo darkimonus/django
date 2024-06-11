@@ -5,8 +5,9 @@
 {% url 'profiles:invite-profiles-view' as path_to_invites %}
 {% url 'profiles:all-profiles-view' as path_to_all_profiles %}
 {% url 'chats:main' as path_to_chat %}
+{% url 'posts:admin-view' as path_to_admin %}
 
-<div class="ui inverted menu nav mb-7">
+<div class="ui inverted menu nav mb-9">
   <div class="ui container">
     <a href="{{path_to_home}}" class="{% if request.path == path_to_home %}active{% endif %} item">
         <h3>Find by face</h3>
@@ -15,7 +16,14 @@
     <a href="{{path_to_posts}}" class="{% if request.path == path_to_posts %}active{% endif %} item">
         Posts
     </a>
-            <a href="{{path_to_chat}}" class="{% if request.path == path_to_chat %}active{% endif %} item">
+
+    {% if request.user.profile.admin %}
+    <a href="{{ path_to_admin }}" class="{% if request.path == path_to_admin %}active{% endif %} item">
+        Admin
+    </a>
+    {% endif %}
+
+    <a href="{{path_to_chat}}" class="{% if request.path == path_to_chat %}active{% endif %} item">
         Chat
     </a>
     {% endif %}
@@ -38,15 +46,6 @@
                 </div>
              </div>
         </div>
-             <div class="item">
-              <form action="" method="GET">
-                <div class="ui action left icon input">
-                <input class="prompt" type="text" name='q' placeholder="name of a friend...">
-                <i class="search icon"></i>
-                <button type='submit' class="ui button">Search</button>
-                </div>
-            </form>
-            </div>
 
           <a href="{% url 'profiles:search-by-photo' %}" class="ui primary button">
             Найти профили по фотографии

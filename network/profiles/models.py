@@ -46,6 +46,7 @@ class Profile(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
+    admin = models.BooleanField(default=False)
 
     objects = ProfileManager()
 

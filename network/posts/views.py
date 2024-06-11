@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from .models import Topic, Post, Like, Comment, Emoji
+from .models import Topic, Post, Like, Comment, Emoji, Report
 from profiles.models import Profile
 from django.db.models import Count, Q
-from .forms import PostModelForm, TopicModelForm, CommentModelForm
-from django.views.generic import UpdateView, DeleteView
+from .forms import PostModelForm, TopicModelForm, CommentModelForm, ReportModelForm
+from django.views.generic import UpdateView, DeleteView, CreateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.http import JsonResponse
@@ -141,3 +141,74 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
                                  'be the author of'
                                  ' the post in order to delete it')
             return super().form_invalid(form)
+
+
+@login_required
+def create_report_view(request, post_id):
+    r_form = ReportModelForm()
+    post = Post.objects.annotate(
+        like_count=Count('like', filter=Q(like__value='Like')),
+        funny_count=Count('like', filter=Q(like__value='Funny')),
+        sad_count=Count('like', filter=Q(like__value='Sad')),
+        dislike_count=Count('like', filter=Q(like__value='Dislike')),
+        empty_count=Count('like', filter=Q(like__value='Empty'))
+    ).get(id=post_id)
+    emojis = Emoji.objects.all()
+    profile = Profile.objects.get(user=request.user)
+
+    if 'submit_r_form' in request.POST:
+        r_form = ReportModelForm(request.POST)
+        if r_form.is_valid():
+            r_instance = r_form.save(commit=False)
+            r_instance.user = profile
+            r_instance.post = Post.objects.get(id=post_id)
+            r_instance.save()
+            return redirect('posts:post-main')
+
+    context = {
+        'r_form': r_form,
+        'post': post,
+        'emojis': emojis,
+        'profile': profile,
+    }
+    return render(request, 'posts/report.html', context)
+
+
+def admin_view(request):
+    profile = Profile.objects.get(user=request.user)
+    if not profile.admin:
+        return redirect('posts:post-main')
+    else:
+        posts = Post.objects.annotate(
+            report_count=Count('reports')
+        ).filter(report_count__gt=0).annotate(
+            like_count=Count('like', filter=Q(like__value='Like')),
+            funny_count=Count('like', filter=Q(like__value='Funny')),
+            sad_count=Count('like', filter=Q(like__value='Sad')),
+            dislike_count=Count('like', filter=Q(like__value='Dislike')),
+            empty_count=Count('like', filter=Q(like__value='Empty'))
+        ).order_by('-updated')
+        emojis = Emoji.objects.all()
+
+        if 'submit_warning' in request.POST:
+            print(request.POST.get('report_id'))
+            report = Report.objects.get(id=request.POST.get('report_id'))
+            report.reviewed = True
+            report.warning = True
+            report.save()
+            return redirect('posts:post-main')
+
+        if 'mark_reviewed' in request.POST:
+            report = Report.objects.get(id=request.POST.get('report_id'))
+            report.reviewed = True
+            report.save()
+            return redirect('posts:post-main')
+
+        if 'block_user' in request.POST:
+            pass
+
+        context = {
+            'posts': posts,
+            'emojis': emojis,
+        }
+        return render(request, 'posts/admin.html', context)
