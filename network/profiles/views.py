@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, Relationship
-from .forms import ProfileModelForm
 from django.views.generic import ListView, DetailView, View
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
+
 from deepface import DeepFace
 import os
-from network import settings
+
+from profiles.models import Profile, Relationship
+from profiles.forms import ProfileModelForm
 
 
 @login_required

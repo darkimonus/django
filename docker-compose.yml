@@ -1,17 +1,18 @@
 services:
-  project-postgres:
+  postgres:
+    container_name: diploma-postgres
     image: postgres:14.2
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "${DATABASE_PORT}:${DATABASE_PORT}"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     restart: unless-stopped
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - django_net
+      - diploma_project_network
     logging:
       driver: "json-file"
       options:
@@ -19,6 +20,7 @@ services:
         max-file: "5"
 
   cache:
+    container_name: diploma-redis
     image: redis:7.0
     restart: always
     ports:
@@ -29,16 +31,16 @@ services:
     volumes:
       - cache:/data
     networks:
-      - django_net
+      - diploma_project_network
     logging:
       driver: "json-file"
       options:
         max-size: "10M"
         max-file: "5"
 
-  project-web:
+  wsgi:
     restart: unless-stopped
-    container_name: my-django-paypal-web
+    container_name: diploma-wsgi
     build: .
     expose:
       - 8000
@@ -51,19 +53,19 @@ services:
     environment:
       - CONTAINER_TYPE=master
     depends_on:
-      - project-postgres
+      - postgres
       - cache
     networks:
-      - django_net
+      - diploma_project_network
     logging:
       driver: "json-file"
       options:
         max-size: "10M"
         max-file: "5"
 
-  project-asgi:
+  asgi:
     restart: unless-stopped
-    container_name: my-django-paypal-asgi
+    container_name: diploma-asgi
     build: .
     expose:
       - 8001
@@ -76,10 +78,10 @@ services:
     environment:
       - CONTAINER_TYPE=asgi
     depends_on:
-      - project-postgres
+      - postgres
       - cache
     networks:
-      - django_net
+      - diploma_project_network
     logging:
       driver: "json-file"
       options:
@@ -89,7 +91,7 @@ services:
   celery:
     build: .
     volumes:
-      - ./my_django_paypal:/app
+      - ./${DJANGO_PROJECT_NAME}:/app
     env_file:
       - ${DJANGO_PROJECT_NAME}/.env
     environment:
@@ -98,11 +100,11 @@ services:
       - CELERY_BACKEND=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
     restart: unless-stopped
     depends_on:
-      - project-web
+      - wsgi
       - cache
-      - project-postgres
+      - postgres
     networks:
-      - django_net
+      - diploma_project_network
     logging:
       driver: "json-file"
       options:
@@ -112,7 +114,7 @@ services:
   celery_beat:
     build: .
     volumes:
-      - ./my_django_paypal:/app
+      - ./${DJANGO_PROJECT_NAME}:/app
     env_file:
       - ${DJANGO_PROJECT_NAME}/.env
     environment:
@@ -121,11 +123,11 @@ services:
       - CELERY_BACKEND=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
     restart: unless-stopped
     depends_on:
-      - project-web
+      - wsgi
       - cache
-      - project-postgres
+      - postgres
     networks:
-      - django_net
+      - diploma_project_network
 
 volumes:
   pgdata:
@@ -134,4 +136,4 @@ volumes:
     driver: local
 
 networks:
-  django_net:
+  diploma_project_network:

@@ -93,29 +93,6 @@ TEMPLATES = [
     },
 ]
 
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT", default=6379)
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
-        },
-    },
-}
-
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
 WSGI_APPLICATION = 'network.wsgi.application'
 
 # Database
@@ -195,9 +172,47 @@ STATICFILES_DIRS = [
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "static_cdn", "static_root")
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "static_cdn", "media_root")
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ASGI_APPLICATION = 'network.asgi.application'
+
+# Run Celery in sync mode (for local development)
+CELERY_WORK_SYNC = os.getenv("CELERY_WORK_SYNC")
+CELERY_ALWAYS_EAGER = CELERY_WORK_SYNC is not None
+CELERY_TASK_ALWAYS_EAGER = CELERY_WORK_SYNC is not None
+
+# Celery via Redis (from environment variables)
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_DEFAULT_QUEUE = 'network_queue'
+CELERY_BROKER_TRANSPORT_OPTIONS = {'queue_prefix': 'network_'}
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT", default=6379)
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+if REDIS_PASSWORD:
+    REDIS_PATH = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2"
+    CHANNEL_REDIS_HOST = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2"
+else:
+    REDIS_PATH = f"redis://{REDIS_HOST}:{REDIS_PORT}/2"
+    CHANNEL_REDIS_HOST = (REDIS_HOST, REDIS_PORT)
+
+
+CELERY_BROKER_URL = REDIS_PATH
+CELERY_RESULT_BACKEND = REDIS_PATH
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_PATH,
+    }
+}
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [CHANNEL_REDIS_HOST],
+        },
+    },
+}

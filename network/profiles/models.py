@@ -1,45 +1,46 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .utils import get_random_code
 from django.template.defaultfilters import slugify
-from django.db.models import Q
 from django.shortcuts import reverse
 
-
-class ProfileManager(models.Manager):
-    def get_all_profiles_to_invite(self, sender):
-        profiles = Profile.objects.all().exclude(user=sender)
-        profile = Profile.objects.get(user=sender)
-        qs = Relationship.objects.filter(Q(sender=profile) | Q(receiver=profile))
-        print(qs)
-
-        accepted = set([])
-        for rel in qs:
-            if rel.status == 'accepted':
-                accepted.add(rel.receiver)
-                accepted.add(rel.sender)
-        print(accepted)
-
-        avaliable = [profile for profile in profiles if profile not in accepted]
-        print(avaliable)
-        return avaliable
-
-    def get_all_profiles(self, me):
-        profiles = Profile.objects.all().exclude(user=me)
-        return profiles
+from profiles.utils import get_random_code
+from profiles.choices import STATUS_CHOICES
+from profiles.managers import ProfileManager, RelationshipManager
 
 
 # Create your models here.
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(default='-', max_length=300)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+    bio = models.TextField(
+        default='-',
+        max_length=300
+    )
     email = models.CharField(max_length=30)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
+    first_name = models.CharField(
+        max_length=30,
+        blank=True
+    )
+    last_name = models.CharField(
+        max_length=30,
+        blank=True
+    )
     country = models.CharField(max_length=30)
-    avatar = models.ImageField(default='avatars/avatar.png', upload_to='avatars/')
-    friends = models.ManyToManyField(User, blank=True, related_name='friends')
-    slug = models.SlugField(unique=True, blank=True)
+    avatar = models.ImageField(
+        default='avatars/avatar.png',
+        upload_to='avatars/'
+    )
+    friends = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name='friends'
+    )
+    slug = models.SlugField(
+        unique=True,
+        blank=True
+    )
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
     admin = models.BooleanField(default=False)
@@ -114,22 +115,21 @@ class Profile(models.Model):
         super().save(*args, **kwargs)
 
 
-STATUS_CHOICES = (
-    ('send', 'send'),
-    ('accepted', 'accepted')
-)
-
-
-class RelationshipManager(models.Manager):
-    def invitations_received(self, receiver):
-        qs = Relationship.objects.filter(receiver=receiver, status='send')
-        return qs
-
-
 class Relationship(models.Model):
-    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='sender')
-    receiver = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='receiver')
-    status = models.CharField(max_length=8, choices=STATUS_CHOICES)
+    sender = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='sender'
+    )
+    receiver = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='receiver'
+    )
+    status = models.CharField(
+        max_length=8,
+        choices=STATUS_CHOICES
+    )
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
 

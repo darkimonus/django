@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import (
+from profiles.views import (
     profile_view,
     invites_received_view,
     ProfileListView,

@@ -6,7 +6,7 @@ from datetime import datetime
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user_id = self.scope['user'].id  # Предполагается, что вы используете Django и имеете объект пользователя
+        self.user_id = self.scope['user'].id
         self.room_name = self.scope['url_route']['kwargs']['room_name']
 
         # Join room group
@@ -36,7 +36,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
 
-        # Создаем объект сообщения с текстом, отправителем и временем
         message_data = {
             'message': message,
             'sender': self.user_id,
@@ -54,7 +53,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'sender': self.user_id,
-                'timestamp': message_data['timestamp']  # Отправляем время отправки сообщения
+                'timestamp': message_data['timestamp']
             }
         )
 

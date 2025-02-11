@@ -1,16 +1,16 @@
 from django.shortcuts import render, redirect
-from .models import Post, Like, Emoji, Report
-from profiles.models import Profile
-from django.db.models import Count, Q
-from .forms import PostModelForm, TopicModelForm, CommentModelForm, ReportModelForm
 from django.views.generic import UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q
 
+from posts.models import Post, Like, Emoji, Report
+from posts.forms import PostModelForm, TopicModelForm, CommentModelForm, ReportModelForm
 
-# Create your views here.
+from profiles.models import Profile
+
 
 @login_required
 def post_comment_create_and_list_view(request):

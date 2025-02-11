@@ -1,5 +1,5 @@
 from django import forms
-from .models import Topic, Post, Comment, Report
+from posts.models import Topic, Post, Comment, Report
 
 
 class TopicModelForm(forms.ModelForm):
