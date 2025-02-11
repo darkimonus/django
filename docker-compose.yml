@@ -1,0 +1,137 @@
+services:
+  project-postgres:
+    image: postgres:14.2
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - django_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
+        max-file: "5"
+
+  cache:
+    image: redis:7.0
+    restart: always
+    ports:
+      - '${REDIS_PORT}:${REDIS_PORT}'
+    env_file:
+      - ${DJANGO_PROJECT_NAME}/.env
+    command: redis-server --save 20 1 --loglevel warning --port ${REDIS_PORT}
+    volumes:
+      - cache:/data
+    networks:
+      - django_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
+        max-file: "5"
+
+  project-web:
+    restart: unless-stopped
+    container_name: my-django-paypal-web
+    build: .
+    expose:
+      - 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./${DJANGO_PROJECT_NAME}:/app
+    env_file:
+      - ${DJANGO_PROJECT_NAME}/.env
+    environment:
+      - CONTAINER_TYPE=master
+    depends_on:
+      - project-postgres
+      - cache
+    networks:
+      - django_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
+        max-file: "5"
+
+  project-asgi:
+    restart: unless-stopped
+    container_name: my-django-paypal-asgi
+    build: .
+    expose:
+      - 8001
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./${DJANGO_PROJECT_NAME}:/app
+    env_file:
+      - ${DJANGO_PROJECT_NAME}/.env
+    environment:
+      - CONTAINER_TYPE=asgi
+    depends_on:
+      - project-postgres
+      - cache
+    networks:
+      - django_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
+        max-file: "5"
+
+  celery:
+    build: .
+    volumes:
+      - ./my_django_paypal:/app
+    env_file:
+      - ${DJANGO_PROJECT_NAME}/.env
+    environment:
+      - CONTAINER_TYPE=worker
+      - CELERY_BROKER=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
+      - CELERY_BACKEND=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
+    restart: unless-stopped
+    depends_on:
+      - project-web
+      - cache
+      - project-postgres
+    networks:
+      - django_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10M"
+        max-file: "5"
+
+  celery_beat:
+    build: .
+    volumes:
+      - ./my_django_paypal:/app
+    env_file:
+      - ${DJANGO_PROJECT_NAME}/.env
+    environment:
+      - CONTAINER_TYPE=beat
+      - CELERY_BROKER=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
+      - CELERY_BACKEND=redis://:${REDIS_PASSWORD}@cache:${REDIS_PORT}/1
+    restart: unless-stopped
+    depends_on:
+      - project-web
+      - cache
+      - project-postgres
+    networks:
+      - django_net
+
+volumes:
+  pgdata:
+    driver: local
+  cache:
+    driver: local
+
+networks:
+  django_net:
